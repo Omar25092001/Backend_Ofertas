@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // Usa .env para la conexión
+}
+
+enum RolUsuario {
+  USUARIO
+  ADMINISTRADOR
+  MODERADOR
+}
+
+model Usuario {
+  id_usuario         Int         @id @default(autoincrement())
+  nombre_completo    String?     @db.VarChar(255)
+  email              String      @unique @db.VarChar(255)
+  contrasena_hash    String      @db.VarChar(255)
+  fecha_registro     DateTime    @default(now())
+  rol                RolUsuario  @default(USUARIO)
+
+  favoritos          Favorito[]
+  suscripciones      SuscripcionNotificacionProducto[]
+  notificaciones     Notificacion[] @relation("UsuarioNotificacion")
+  reportes_realizados ReporteOferta[] @relation("ReportaUsuario")
+  reportes_revisados  ReporteOferta[] @relation("RevisaAdmin")
+}
+
+
+model CategoriaProducto {
+  id_categoria           Int        @id @default(autoincrement())
+  nombre_categoria       String     @unique @db.VarChar(100)
+  descripcion_categoria  String?
+
+  productos              Producto[]
+}
+
+model Supermercado {
+  id_supermercado    Int        @id @default(autoincrement())
+  nombre_supermercado String   @db.VarChar(150)
+  direccion          String?   @db.VarChar(255)
+  url_sitio_web      String?   @db.VarChar(255)
+
+  ofertas            Oferta[]
+}
+
+model Producto {
+  id_producto           Int        @id @default(autoincrement())
+  nombre_producto       String     @db.VarChar(255)
+  marca                 String?    @db.VarChar(100)
+  descripcion_producto  String?
+  imagen_url            String?    @db.VarChar(255)
+  id_categoria          Int?
+
+  categoria             CategoriaProducto? @relation(fields: [id_categoria], references: [id_categoria])
+  ofertas               Oferta[]
+  suscripciones         SuscripcionNotificacionProducto[]
+  notificaciones        Notificacion[]
+}
+
+model Oferta {
+  id_oferta             Int        @id @default(autoincrement())
+  precio_original       Decimal?   @db.Decimal(10, 2)
+  precio_oferta         Decimal    @db.Decimal(10, 2)
+  fecha_inicio_oferta   DateTime?
+  fecha_fin_oferta      DateTime?
+  descripcion_oferta    String?
+  url_oferta_original   String     @db.VarChar(512)
+  fecha_extraccion      DateTime   @default(now())
+  valida                Boolean    @default(true)
+  id_producto           Int
+  id_supermercado       Int
+
+  producto              Producto   @relation(fields: [id_producto], references: [id_producto], onDelete: Cascade)
+  supermercado          Supermercado @relation(fields: [id_supermercado], references: [id_supermercado], onDelete: Cascade)
+
+  favoritos             Favorito[]
+  notificaciones        Notificacion[]
+  reportes              ReporteOferta[]
+}
+
+model Favorito {
+  id_favorito       Int       @id @default(autoincrement())
+  fecha_agregado    DateTime  @default(now())
+  id_usuario        Int
+  id_oferta         Int
+
+  usuario           Usuario   @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+  oferta            Oferta    @relation(fields: [id_oferta], references: [id_oferta], onDelete: Cascade)
+
+  @@unique([id_usuario, id_oferta])
+}
+
+model SuscripcionNotificacionProducto {
+  id_suscripcion                Int      @id @default(autoincrement())
+  precio_deseado_notificar     Decimal? @db.Decimal(10, 2)
+  notificar_cualquier_oferta   Boolean  @default(true)
+  fecha_suscripcion            DateTime @default(now())
+  id_usuario                   Int
+  id_producto                  Int
+
+  usuario                      Usuario   @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+  producto                     Producto  @relation(fields: [id_producto], references: [id_producto], onDelete: Cascade)
+
+  @@unique([id_usuario, id_producto])
+}
+
+model Notificacion {
+  id_notificacion        Int       @id @default(autoincrement())
+  tipo_notificacion      String    @db.VarChar(50)
+  mensaje                String
+  fecha_creacion         DateTime  @default(now())
+  leida                  Boolean   @default(false)
+  id_usuario_destino     Int
+  id_referencia_oferta   Int?
+  id_referencia_producto Int?
+
+  destino_usuario        Usuario   @relation("UsuarioNotificacion", fields: [id_usuario_destino], references: [id_usuario], onDelete: Cascade)
+  referencia_oferta      Oferta?   @relation(fields: [id_referencia_oferta], references: [id_oferta], onDelete: SetNull)
+  referencia_producto    Producto? @relation(fields: [id_referencia_producto], references: [id_producto], onDelete: SetNull)
+}
+
+model ReporteOferta {
+  id_reporte         Int      @id @default(autoincrement())
+  motivo             String?
+  fecha_reporte      DateTime @default(now())
+  estado_reporte     String   @default("pendiente") @db.VarChar(50)
+  fecha_revision     DateTime?
+  notas_revision     String?
+  id_oferta          Int
+  id_usuario_reporta Int?
+  id_admin_revisor   Int?
+
+  oferta             Oferta   @relation(fields: [id_oferta], references: [id_oferta], onDelete: Cascade)
+  reporta_usuario    Usuario? @relation("ReportaUsuario", fields: [id_usuario_reporta], references: [id_usuario], onDelete: SetNull)
+  admin_revisor      Usuario? @relation("RevisaAdmin", fields: [id_admin_revisor], references: [id_usuario], onDelete: SetNull)
+}
+
+model FuenteWebScraping {
+  id_fuente                    Int      @id @default(autoincrement())
+  nombre_fuente               String   @db.VarChar(100)
+  url_base                    String   @db.VarChar(255)
+  frecuencia_actualizacion_minutos Int @default(1440)
+  ultima_extraccion_exitosa   DateTime?
+  activa                      Boolean  @default(true)
+}
