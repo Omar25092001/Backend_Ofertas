@@ -264,7 +264,7 @@ export default async function usuarioRoutes(fastify, options) {
             const { rol } = request.params
 
             // Verificar que el rol sea válido
-            const rolesValidos = ['USUARIO', 'ADMINISTRADOR', 'MODERADOR']
+            const rolesValidos = ['USUARIO', 'ADMINISTRADOR', 'MODERADOR','LECTURA']
             if (!rolesValidos.includes(rol)) {
                 return reply.code(400).send({ error: 'Rol no válido' })
             }
@@ -296,7 +296,7 @@ export default async function usuarioRoutes(fastify, options) {
             const { rol } = request.body
 
             // Verificar que el rol sea válido
-            const rolesValidos = ['USUARIO', 'ADMINISTRADOR', 'MODERADOR']
+            const rolesValidos = ['USUARIO', 'ADMINISTRADOR', 'MODERADOR','LECTURA']
             if (!rolesValidos.includes(rol)) {
                 return reply.code(400).send({ error: 'Rol no válido. Debe ser USUARIO, ADMINISTRADOR o MODERADOR' })
             }

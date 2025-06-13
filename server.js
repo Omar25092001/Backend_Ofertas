@@ -1,5 +1,6 @@
 // server.js
 import Fastify from 'fastify'
+import cors from '@fastify/cors'
 import prismaPlugin from './plugins/prisma.js'
 import UserRoutes from './src/routes/UserRoutes.js'
 import productoRoutes from './src/routes/ProductoRoutes.js'
