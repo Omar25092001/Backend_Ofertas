@@ -6,9 +6,17 @@ import productoRoutes from './src/routes/ProductoRoutes.js'
 import categoriaRoutes from './src/routes/CategoriasRoutes.js'
 import supermercadoRoutes from './src/routes/SupermercadoRoutes.js'
 import ofertasRoutes from './src/routes/OfertasRoutes.js'
+import cors from '@fastify/cors'
 
 const fastify = Fastify({
   logger: true
+})
+
+await fastify.register(cors, { 
+  origin: true,
+  methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 })
 
 // Registrar plugin de Prisma
